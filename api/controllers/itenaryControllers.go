@@ -14,6 +14,8 @@ type ItenaryController struct {
 }
 
 func (controller *ItenaryController) GetItenary(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	
 	var body struct {
 		Location struct {
 			Name string `json:"name"`
@@ -24,7 +26,7 @@ func (controller *ItenaryController) GetItenary(w http.ResponseWriter, r *http.R
 		Preferences           []string `json:"preferences"`
 		NumberOfDaysAvailable int   `json:"number_of_days_available"`
 	}
-	
+
 	err := json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
