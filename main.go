@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/rs/cors"
 	"github.com/joho/godotenv"
 	"github.com/rigved-desai/paryatan-backend/api"
 	"github.com/rigved-desai/paryatan-backend/db"
@@ -23,6 +25,8 @@ func main() {
 	log.Println("Connected to DB!")
 	
 	router := api.NewRouter(dbpool)
+	c := cors.Default()
+	handler := c.Handler(router)
 	
 	portString := os.Getenv("PORT")
 	if portString == "" {
@@ -30,7 +34,7 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Handler: router,
+		Handler: handler,
 		Addr: ":" + portString,
 	}
 	log.Printf("Server is running on PORT: %v", portString)
