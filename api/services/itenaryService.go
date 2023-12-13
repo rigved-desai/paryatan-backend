@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"sort"
 	"sync"
 
@@ -13,7 +14,7 @@ type ItenaryService struct {
 	DataAccessor interfaces.ItenaryDataAccessor
 }
 
-func (service *ItenaryService) GetItenary(latitude, longitude float64, preferences []string, numberOfDaysAvailable int) (models.Itenary, error) {
+func (service *ItenaryService) GetItenary(startLocationName, startLocationCity string, latitude, longitude float64, preferences []string, numberOfDaysAvailable int) (models.Itenary, error) {
 	clusterLabel, err := service.DataAccessor.GetClusterByCoordinates(latitude, longitude)
 
 	if err != nil {
@@ -64,8 +65,10 @@ func (service *ItenaryService) GetItenary(latitude, longitude float64, preferenc
 
 	finalPlacesInItenary := service.choosePlacesAccordingToNumberOfDays(finalScoresAndDistances, numberOfDaysAvailable)
 
+	finalDayPlans := service.setDayPlans(finalPlacesInItenary, numberOfDaysAvailable, startLocationName, startLocationCity, latitude, longitude)
+
 	return models.Itenary{
-		Places: finalPlacesInItenary,
+		DayPlans: finalDayPlans,	
 	}, nil
 }
 
@@ -108,8 +111,26 @@ func (service *ItenaryService) choosePlacesAccordingToNumberOfDays(placesWithFin
 			return placesWithFinalScores[i].VisitabilityScore > placesWithFinalScores[j].VisitabilityScore
 		},
 	)
-	if numberOfDaysAvailable*2 > len(placesWithFinalScores) {
+	if numberOfDaysAvailable*4 > len(placesWithFinalScores) {
 		return placesWithFinalScores
 	}
-	return placesWithFinalScores[:2*numberOfDaysAvailable]
+	return placesWithFinalScores[:4*numberOfDaysAvailable]
+}
+
+func (service *ItenaryService) setDayPlans(finalPlacesInItenary []models.Place, numberOfDaysAvailable int, startLocationName, startLocationCity string, userStartLatitude float64, userStartLongitude float64) (finalDayPlans []models.DayPlan) {
+	numberOfDaysInItenary := min(numberOfDaysAvailable, len(finalPlacesInItenary)/4 + min(1, len(finalPlacesInItenary)%4))
+	for i:= 0; i<numberOfDaysInItenary; i++ {
+		places := make([]models.Place, 0)
+		places = append(places, models.Place{
+			Name: startLocationName,
+			City: startLocationCity,
+			Latitude: userStartLatitude,
+			Longitude: userStartLongitude,
+		})
+		finalDayPlans = append(finalDayPlans, models.DayPlan{
+			Day: fmt.Sprintf("Day %v", i+1),
+			Places: append(places, finalPlacesInItenary[i*4:min(len(finalPlacesInItenary), (i+1)*4)]...),
+		})
+	}
+	return finalDayPlans
 }

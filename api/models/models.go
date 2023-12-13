@@ -1,7 +1,12 @@
 package models
 
 type Itenary struct {
-	Places []Place 
+	DayPlans []DayPlan
+}
+
+type DayPlan struct {
+	Day string
+	Places []Place
 }
 
 type Place struct {
