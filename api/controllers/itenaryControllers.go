@@ -14,8 +14,7 @@ type ItenaryController struct {
 }
 
 func (controller *ItenaryController) GetItenary(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	
+
 	var body struct {
 		Location struct {
 			Name string `json:"name"`
