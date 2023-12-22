@@ -18,4 +18,7 @@ A detailed documentation of the Paryatan API is available at the below mentioned
 https://documenter.getpostman.com/view/26893429/2s9YkrazZP
 ```
 
+## Further Information
+
+Paryatan was created as an implementation of the work done in the Minor Project in my 5th semester. Please refer to the project report for further information regarding the dataset used and the algorithm. 
   
