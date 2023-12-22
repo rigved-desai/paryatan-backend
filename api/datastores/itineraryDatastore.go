@@ -1,16 +1,15 @@
 package datastores
 
 import (
-
 	"github.com/rigved-desai/paryatan-backend/api/interfaces"
 	"github.com/rigved-desai/paryatan-backend/api/models"
 )
 
-type ItenaryDataStore struct {
+type ItineraryDataStore struct {
 	interfaces.DBHandler
 }
 
-func (datastore *ItenaryDataStore) GetClusterByCoordinates(latitude, longitude float64) (cluster int, err error) {
+func (datastore *ItineraryDataStore) GetClusterByCoordinates(latitude, longitude float64) (cluster int, err error) {
 	rows, err := datastore.Query("SELECT * FROM get_cluster($1, $2)", latitude, longitude)
 	if err != nil {
 		return 0, err
@@ -24,7 +23,7 @@ func (datastore *ItenaryDataStore) GetClusterByCoordinates(latitude, longitude f
 	return cluster, nil
 }
 
-func (datastore *ItenaryDataStore) GetPlacesWithOriginalScores(cluster int, latitude, longitude float64) (placesWithOriginalScores []models.Place, err error) {
+func (datastore *ItineraryDataStore) GetPlacesWithOriginalScores(cluster int, latitude, longitude float64) (placesWithOriginalScores []models.Place, err error) {
 	rows, err := datastore.Query("SELECT * FROM get_places_with_original_scores($1, $2, $3)", cluster, latitude, longitude)
 	if err != nil {
 		return []models.Place{}, err
@@ -45,14 +44,14 @@ func (datastore *ItenaryDataStore) GetPlacesWithOriginalScores(cluster int, lati
 			Longitude:         longitude,
 			Rating:            rating,
 			VisitabilityScore: visitabilityScore,
-			DistanceFromUser: distanceFromUser,
+			DistanceFromUser:  distanceFromUser,
 		})
 	}
 	return placesWithOriginalScores, nil
 
 }
 
-func (datastore *ItenaryDataStore) GetMinAndMaxDistanceFromUser(cluster int, latitude, longitude float64) (minDistance float64, maxDistance float64, err error) {
+func (datastore *ItineraryDataStore) GetMinAndMaxDistanceFromUser(cluster int, latitude, longitude float64) (minDistance float64, maxDistance float64, err error) {
 	rows, err := datastore.Query("SELECT * FROM get_min_and_max_distance_from_user($1, $2, $3)", latitude, longitude, cluster)
 	if err != nil {
 		return 0.0, 0.0, err
@@ -68,7 +67,7 @@ func (datastore *ItenaryDataStore) GetMinAndMaxDistanceFromUser(cluster int, lat
 	return minDistance, maxDistance, nil
 }
 
-func (datastore *ItenaryDataStore) GetAllPlaces() ([]models.Place, error) {
+func (datastore *ItineraryDataStore) GetAllPlaces() ([]models.Place, error) {
 	rows, err := datastore.Query("SELECT place_name, latitude_coordinates, longitude_coordinates, rating FROM tourist_places")
 	if err != nil {
 		return nil, err

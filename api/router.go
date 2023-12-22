@@ -22,13 +22,13 @@ func v1Router(postgre *db.Postgre) *chi.Mux {
 		ConnPool: postgre.DB,
 	}
 
-	controller := controllers.ItenaryController{
-		ItenaryManager: &services.ItenaryService{
-			DataAccessor: &datastores.ItenaryDataStore {
+	controller := controllers.ItineraryController{
+		ItineraryManager: &services.ItineraryService{
+			DataAccessor: &datastores.ItineraryDataStore{
 				DBHandler: postgreSQLHandler,
 			},
 		},
-	} 
-	router.Post("/itenary", controller.GetItenary)
+	}
+	router.Post("/itinerary", controller.GetItinerary)
 	return router
 }

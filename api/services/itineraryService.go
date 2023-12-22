@@ -11,16 +11,16 @@ import (
 	"github.com/rigved-desai/paryatan-backend/api/models"
 )
 
-// implements ItenaryManager from interfaces pkg
-type ItenaryService struct {
-	DataAccessor interfaces.ItenaryDataAccessor
+// implements ItineraryManager from interfaces pkg
+type ItineraryService struct {
+	DataAccessor interfaces.ItineraryDataAccessor
 }
 
-func (service *ItenaryService) GetItenary(startLocationName, startLocationCity string, latitude, longitude float64, preferences []string, numberOfDaysAvailable int) (models.Itenary, error) {
+func (service *ItineraryService) GetItinerary(startLocationName, startLocationCity string, latitude, longitude float64, preferences []string, numberOfDaysAvailable int) (models.Itinerary, error) {
 	clusterLabel, err := service.DataAccessor.GetClusterByCoordinates(latitude, longitude)
 
 	if err != nil {
-		return models.Itenary{}, err
+		return models.Itinerary{}, err
 	}
 
 	var placesWithOriginalScores []models.Place
@@ -43,10 +43,10 @@ func (service *ItenaryService) GetItenary(startLocationName, startLocationCity s
 	wg.Wait()
 
 	if err1 != nil {
-		return models.Itenary{}, err1
+		return models.Itinerary{}, err1
 	}
 	if err2 != nil {
-		return models.Itenary{}, err2
+		return models.Itinerary{}, err2
 	}
 
 	placesWithIntermediateScores := service.getPlacesWithIntermediateScores(
@@ -65,17 +65,17 @@ func (service *ItenaryService) GetItenary(startLocationName, startLocationCity s
 
 	finalScoresAndDistances := service.getPlacesWithFinalScores(placesWithIntermediateScores)
 
-	finalPlacesInItenary := service.choosePlacesAccordingToNumberOfDays(finalScoresAndDistances, numberOfDaysAvailable)
+	finalPlacesInItinerary := service.choosePlacesAccordingToNumberOfDays(finalScoresAndDistances, numberOfDaysAvailable)
 
-	finalDayPlans := service.setDayPlans(finalPlacesInItenary, numberOfDaysAvailable, startLocationName, startLocationCity, latitude, longitude)
+	finalDayPlans := service.setDayPlans(finalPlacesInItinerary, numberOfDaysAvailable, startLocationName, startLocationCity, latitude, longitude)
 
-	return models.Itenary{
+	return models.Itinerary{
 		DayPlans: finalDayPlans,
 	}, nil
 }
 
 // below internal functions can be optimized for space by passing objects by reference?
-func (service *ItenaryService) getPlacesWithIntermediateScores(originalScoresAndDistances []models.Place, preferences []string, minDistance, maxDistance float64) (placesWithIntermediateScores []models.Place) {
+func (service *ItineraryService) getPlacesWithIntermediateScores(originalScoresAndDistances []models.Place, preferences []string, minDistance, maxDistance float64) (placesWithIntermediateScores []models.Place) {
 	VISIBILITY_SCORE_WEIGHT, _ := strconv.ParseFloat(os.Getenv("VISIBILITY_SCORE_WEIGHT"), 64)
 	PERSONALIZATION_SCORE_WEIGHT, _ := strconv.ParseFloat(os.Getenv("PERSONALIZATION_SCORE_WEIGHT"), 64)
 	NORMALIZED_DISTANCE_WEIGHT, _ := strconv.ParseFloat(os.Getenv("NORMALIZED_DISTANCE_WEIGHT"), 64)
@@ -97,7 +97,7 @@ func (service *ItenaryService) getPlacesWithIntermediateScores(originalScoresAnd
 	return placesWithIntermediateScores
 }
 
-func (service *ItenaryService) getPlacesWithFinalScores(placesWithIntermediateScores []models.Place) (placesWithFinalScores []models.Place) {
+func (service *ItineraryService) getPlacesWithFinalScores(placesWithIntermediateScores []models.Place) (placesWithFinalScores []models.Place) {
 	PENALTY_FACTOR_CONSTANT, _ := strconv.ParseFloat(os.Getenv("PENALTY_FACTOR_CONSTANT"), 64)
 	penalties := make(map[string]int)
 	for _, place := range placesWithIntermediateScores {
@@ -111,7 +111,7 @@ func (service *ItenaryService) getPlacesWithFinalScores(placesWithIntermediateSc
 	return placesWithFinalScores
 }
 
-func (service *ItenaryService) choosePlacesAccordingToNumberOfDays(placesWithFinalScores []models.Place, numberOfDaysAvailable int) (placesinItenary []models.Place) {
+func (service *ItineraryService) choosePlacesAccordingToNumberOfDays(placesWithFinalScores []models.Place, numberOfDaysAvailable int) (placesinItinerary []models.Place) {
 	sort.Slice(
 		placesWithFinalScores,
 		func(i, j int) bool {
@@ -124,9 +124,9 @@ func (service *ItenaryService) choosePlacesAccordingToNumberOfDays(placesWithFin
 	return placesWithFinalScores[:3*numberOfDaysAvailable]
 }
 
-func (service *ItenaryService) setDayPlans(finalPlacesInItenary []models.Place, numberOfDaysAvailable int, startLocationName, startLocationCity string, userStartLatitude float64, userStartLongitude float64) (finalDayPlans []models.DayPlan) {
-	numberOfDaysInItenary := min(numberOfDaysAvailable, len(finalPlacesInItenary)/3+min(1, len(finalPlacesInItenary)%3))
-	for i := 0; i < numberOfDaysInItenary; i++ {
+func (service *ItineraryService) setDayPlans(finalPlacesInItinerary []models.Place, numberOfDaysAvailable int, startLocationName, startLocationCity string, userStartLatitude float64, userStartLongitude float64) (finalDayPlans []models.DayPlan) {
+	numberOfDaysInItinerary := min(numberOfDaysAvailable, len(finalPlacesInItinerary)/3+min(1, len(finalPlacesInItinerary)%3))
+	for i := 0; i < numberOfDaysInItinerary; i++ {
 		places := make([]models.Place, 0)
 		places = append(places, models.Place{
 			Name:      startLocationName,
@@ -136,7 +136,7 @@ func (service *ItenaryService) setDayPlans(finalPlacesInItenary []models.Place, 
 		})
 		finalDayPlans = append(finalDayPlans, models.DayPlan{
 			Day:    fmt.Sprintf("Day %v", i+1),
-			Places: append(places, finalPlacesInItenary[i*3:min(len(finalPlacesInItenary), (i+1)*3)]...),
+			Places: append(places, finalPlacesInItinerary[i*3:min(len(finalPlacesInItinerary), (i+1)*3)]...),
 		})
 	}
 	return finalDayPlans
